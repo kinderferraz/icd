@@ -1,0 +1,11 @@
+#+title: Introdução a ciência de dados
+#+email: ferraz.alkindar@gmail.com
+#+author: kinder rodrigues
+#+email: ferraz.alkindar@gmail.com
+#+startup: overview
+#+property: header-args :comments yes :results silent :tangle yes
+#+reveal_theme: night
+
+* Repositorio de projetos
+Alkindar Rodrigues
+SP3029956
