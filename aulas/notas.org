@@ -1,0 +1,377 @@
+#+title: Notas de aula --- Intro a Ciencia de Dados
+#+author: kinder rodrigues
+#+email: ferraz.alkindar@gmail.com
+#+startup: overview
+#+property: header-args :comments yes :results silent :tangle yes
+#+reveal_theme: night
+
+* Aula 1
+** Principios
+Ciência de dados é o conjunto de *processos, modelos e tecnologias* que
+estudam dados _durante o seu ciclo de vida_
+- Big data (7 V's)
+  - Volume
+    um volume de dados consideravel, impossível de ser analisado por
+    uma pessoa sozinha
+  - Velocidade
+    o processo de recolhimento, análise e atualização dos dados deve
+    é feito de forma contínua, de modo a manter uma visão atualizada
+    dos fenômenos de interesse (e constante descoberta de novos
+    fenômenos de interesse)
+  - Veracidade
+    os dados devem refletir o fenômeno observado
+  - Valor
+    a análise deve produzir informação que é util para a resolução de
+    algum problema concreto
+  - Variabilidade
+    a análise deve ser variável, de modo a ser adaptável a novas
+    observações, sejam vindas da base em si quanto dos resultados
+    produzidos da análise
+  - Variedade
+    deve-se estar aberto a observação em diversas formas de dados, da
+    forma como aparecerem
+  - Visibilidade
+    deve ser visível para os interessados qual o resultado e o
+    processo, se os objetivos da análise foram atingidos e como podem
+    ser usados para tomada de decisões
+** Objetivos
+- Encontrar padrões ocultos e correlações em bases massivas, de origem
+  e formatos diversos com precisão
+** Tecnicas (overview)
+- Padronização/Integração:
+  Dados recolhidos em diversos formatos devem ser colocados em
+  estruturas que permitem a elaboração de uma visão compreensiva de
+  _diversas instâncias do mesmo fato_
+- _ETL -- extract, transform, load_
+  tecnica de padronização que consiste em capturar dados brutos,
+  transformá-los em um formato esperado e carregá-los a uma base ou em
+  memória para análise
+- _Datafication_
+  transformação de qualquer fenômeno em registro de dado, de modo a
+  identificar padrões de uso e comportamento
+- Amostragem
+  ainda é interessante usar da amostragem estatística para seleção de
+  registros para análise, uma vez que os padrões podem ser encontrados
+  (frequentemente) com ganhos de análise e consumo de recursos
+* Aula 2
+** Transformação de dados
+Processo de alterar o formato de um registro (ou classe de registros)
+visando _armazenamento em uma forma otimizada para análise de dados_
+- geralmente executado no processo de construção de uma base e
+  eventualmente na análise
+- Latência: tempo entre a produção de novos registros, a recepção
+  dele, e o fim do processamento, uma vez que pode haver _intervalos
+  entre cada etapa do processo visando momentos oportunos_, de baixa
+  demanda dos sistemas e de acúmulo de dados brutos no tranformador
+- O ETL tem alto custo computacional e _deve ser resiliente a diversas
+  falhas_, e devem ser projetados para não perder registros diante da
+  indisponibilidade. Ex de falhas:
+  - falha de rede
+  - queda no sistema de emissão de dado
+  - registro de formato inesperado
+
+*** Extração
+parte do processo de construção de uma base/warehouse, consiste na
+implementação de conectores com fontes de dados
+- podem asssumir formatos como:
+  - listeners de inputs de usuários
+  - sensores de aparelhos, como carros, geladeiras etc
+  - crawlers de internet (oberservação de dados de 3...)
+- _o dado primario e intermediario geralmente é descartado_, de modo a
+  obstruir um rastreio da origem do dado, principalmente com relação a
+  dados de usuários privados e dados legamente protegidos
+** Armazendamento
+*** Data Warehouse
+Local (físico e lógico) de _armazenamento de dados históricos_ (3-10
+anos) provenientes de diversos sistemas e bancos relacionais. Por se
+preocupar com a *historicidade* e progressão do dado, _permite apenas a
+inclusão de dados_
+- Organização interna /orientada a domínio/:
+  - criado e mantido com foco num assunto específico de modo a dar uma
+  visão completa sobre ele
+  - dados emitidos nas mesmas fontes, mas que não dizem respeito ao
+    domínio são descartados
+- Integrados
+  - os dados são transformados previamente a inclusão no DW, de modo a
+    garatir consistência técnica (nomes, tipos...) entre os registros
+- Estável
+  - uma vez inserido, um dado é descartado apenas quando seu tempo de
+    vida chega ao fim
+  - operações de update/sobreescrita não são permitidas, apenas leitura
+**** Data mart
+- Subivisões do warehouse
+- melhora o gerenciamento de partes internas dos warehouse
+*** Objetos de armazenamento
+O DW usa o modelo multidimensional (não relacional), centrado no *fato*
+- _Fato_ -> informação central do domínio que orienta o DW
+- _Dimensões_ -> constituem o fato de forma qualitativa, permitindo
+  posicioná-lo dentre os demais por identificadores de quem? quando?
+  onde?
+  - Não permite a comparação direta entre fatos, apenas quando
+    combinados a medidas, ex:
+    - pessoas que venderam em sp ou rj? (dimensões)
+    - qual estado vendeu mais e por qual margem? (dimensão + medida)
+  - Geralmente é uma tabela auxiliar no banco, com suas medidas
+    (atributos) próprias
+- _Medidas_ -> constituem o fato de forma quantitativa, indicando
+  métricas que permitem
+A dimensão de tempo é um caso particular, uma vez que é inerente ao
+modelo DW (apenas inclusão), e ainda é quantitativa e permite ser
+colocada como um campo no registro (timestamp)
+**** Chave substituta sk
+- Produzida no processo de construção do DW e sem valor semântico
+- Garante a historicidade dos dados
+- É usada no lugar de uma chave primária para relacionar o fato a suas
+  dimensões, mantendo atualizações relacionadas entre si
+  - Uma vez que o DW so permite insert, uma atualização implica uma
+    nova pk, e o uso da sk permite o link entre linhas de update numa
+    mesma "tabela"
+**** Estrela e Floco de neve
+Formas de se organizar tabelas do DM, cada uma representando uma
+dimensão com maior ou menor grau de normalização.
+No modelo estrela as tabelas de dimensões possuem em si todos os
+valores que a compõe, enquanto no modelo floco de neve, dados de menor
+variabilidade são isolados
+**** Granularidade
+Usando uma dimensão, a granularidade é o entendimento de suas
+subivisões e agrupamentos destes, oferecendo uma visão mais geral ou
+escpecífica de um fato.
+*** OLAP
+- OnLine Analytical Processing
+- OLTP -> OnLine Transaction Processing
+
+Uma possibilidade de se implementar o DW é num OLAP, um servidor
+especializado na execução de análises, e por ser distinto do oltp, não
+impacta o funcionamento do sistema do ponto de vista do usuário
+** Visualização
+Para os tomadores de decisão, a visualização do dado deve ser
+facilitada, usando de ferramentas como
+
+- Relatório
+  informação estática e sem interatividade, de caráter operacional e
+  não deve ser usado para exploração
+- Cubo
+  representação multidimensional do dado, organizado ao redor de um
+  fato, permite operações de /drill down/ e /drill up/, isto é, dar zoom,
+  ampliar ou reduzir o nível de detalhe da apresentação
+- Dashboard
+  painel visual dinâmico com indicadores sobre o assunto, informação
+  resumida. Dificilmente mostra um julgamento sobre a informação
+  apresentada, mas pode mostrar os "melhores" e "piores"
+- Infográficos
+  relátorio com apresentação bonita
+
+estes fornecem dados para a inteligência de negócios BI
+* Aula 3
+** Manipulação de grandes volumes de dados
+- HADOOP
+  Não é um substituto dos DW, mas uma alternativa para volumes de
+  dados grandes (em comparação ao DW) e cujo tratamento é
+  impossibilitado, isto é, contemplam outros problemas aos quais o DW
+  nao responde bem
+  - sistema de arquivos distríbuido (HDFS)
+    - sistema de arquivos distribuidos da forma master/slave
+      - o nó mestre (namenode) mantém o registro dos arquivos e
+        metadados, incluindo localização de blocos
+        cuida da redundância e da autorização de acesso aos nós
+      - nós escravos aramazenam arquivos e dados
+        um arquivo maior que um nó pode ser quebrado entre blocos de 2
+        ou mais nós
+    - como no DW, é pensado para entrada única e leitura múltipla, não
+      permite updates
+  - processamento de dados distríbuido (MapReduce)
+    - influência de programação funcional, paralelismo
+    - processamento distribuído entre computadores nós agrupados em
+      clusters
+    - a carga de processamento é balanceada dentro de um cluster de
+      modo a manter cada nó operante
+    - opera em 6 fases:
+      - input -> entrada de dados
+      - split -> separação de partes do dado
+      - mapping -> operações são realizadas em cada entrada separada
+      - shufling -> resultados são agregados
+      - reduce -> resultados agrupados são processados para sua forma final
+      - final -> finalização do processamento
+  - gerenciamento de recursos yarn
+    - orquestrador
+    - ??
+* Aula 4
+** Análise Explícita
+Técnica de transformação usando de operações de baixa complexidade com
+o objetivo de conhecer a variablidade da base
+  - filtro, /drill down ou up/
+  - conhecimento produzível com buscas no sql de baixa complexidade
+    - join
+    - lógica booleana
+    - resumo -> fornece medidas estatísticas comuns (media, dp, mediana,
+      frequência)
+    - segmentação -> aplicação de intervalos sob os quais se pode
+      indentificar alguma semelhança entre os registros
+    - padrões e lacunas
+    - duplicação
+* Aula 5
+** Análise Exploratória
+Etapa anterior às técnicas de /machine learning/, busca entender o conteúdo da
+base sem pressupor nada sobre ele, de modo a obter o contexto que
+norteia as ténicas mais avançadas, tanto na modelagem quanto na
+interpretação.
+* Aula 6
+** Análise Implicíta (Machine Learning)
+Uso de téncias que permitem encontrar _padrões implicítos na base_,
+geralmente separada em bases de treinamento e teste, de modo que a
+base de treinamento é usada para construir um modelo. Este é então
+aplicado a base de teste para validá-lo
+
+*** Aprendizado supervisionado
+Os dados são rotulados e contextualizados para a maquina antes de se
+produzir um modelo. As técnicas são de:
+- classificação
+- regressão
+e produzem resultado mais ou menos preditivo
+
+*** Aprendizado não supervisionado
+Os algoritmos não possuem contexto da informação que processam nesta
+forma de aprendizado, e _o resultado deve ser interpretado de forma a
+se entender a motivação do modelo_ e seu significado.
+- Clusterização
+- Regras de associação
+- outros
+
+*** Data mining
+Usa de mineração de dados para aplicar o modelo produzido sobre novos
+conjuntos de dados de modo a gerar informação sobre o novo conjunto.
+A forma como o modelo é aplicado depende tanto de conhecimentos
+técnicos quanto de criatividade, conhecimento de regras de negócio e
+bom senso.
+**** Crisp
+Acordo entre empresas com regras para uso da mineração de dados
+- Entendimento
+  - de Negócio
+    entender o objetivo que norteia a análise, quais os problemas
+    enfrentados e as informações que podem ser úteis para resolvê-lo
+  - de Dados
+    entender como a base é construída, relacionamentos internos a
+    base, quais os indicadores podem ser extraídos, a confiabilidade
+    dela e suas lacunas
+- Preparação
+  normalização e padronização dos valores da base, considerando
+  valores simbólicos e numéricos
+- Modelagem
+  produção do modelo (yay)
+- Validação
+  avaliar se o resultado do modelo produzido na fase anterior é
+  válido e confiável, se predições são acuradas, etc
+- Implantação
+  colocação do modelo para uso real sobre dados novos
+**** KDD
+Procedimento de *descoberta de conhecimento em databases*
+- Seleção -> entendimento de negócio
+- pre processamento -> entendimento de dados
+- transformação -> preparação de dados
+- mineração -> modelagem
+- interpretação -> avaliação e implantação
+* Aula 7/8
+Técnicas de aprendizado supervisionado, focando em valores contínuos
+(regresão linear) e valores categóricos (classificação), por exemplo:
+sim/não, m/f, doente ou saudável)
+
+** Regressão linear
+Usada para prever o valor de uma váriavel contínua com base em uma ou
+mais variáveis, através de uma regressão linear que gera uma reta a
+partir de pontos distintos.
+- São descobertos coeficientes de regressão:
+  - ponto de interceptação
+  - inclinação
+  - termo de erro
+
+- Termos necessários:
+  - variável dependente: variável a ser predita
+  - variavel independente: aquelas que são usadas para posicionar o
+    registro e gerar previsão
+  - outliers: registros que ficam distantes dos demais, interferindo no
+    resultado (mas cujo motivo deve ser entendido talvez)
+  - multicolinearidade: correlação entre variáveis independentes, deve
+    ser evitado pois criam uma ampliação de seus efeito no resultados
+  - /underfitting/ e /overfitting/: um resultado muito mal ajustado ao
+    conjunto (termo de erro alto) é inútil, e muito bem ajustado (erro
+    baixo) pode não ser adequado a outros conjuntos
+
+- Métricas do modelo:
+  O modelo só é significativo quando p-value < 0.05, quanto mais
+  estrelas melhor e mais impactante a variavel
+  - Coeficientes = 0 -> hipotese nula!!
+  - t-value -> inversamente proporcional a chance do coeficiente ser 0
+    por acaso
+  - p-value -> probabilidade do t-value ser maior ou menor quando
+    hipotese nula é verdadeira. Logo p-value baixo indica que o
+    coeficiente não mudaria em outro cenário
+
+- Critérios de informação
+  Medidas de ajuste de modelo
+  - AIC -- Critério de informação de Akaike
+    Procura-se o modelo com menor AIC, tende a selecionar modelos mais complexos
+  - BIC -- Critério de informação de Bayes
+    Procura-se o modelo com menor AIC, tende a selecionar modelos mais simples
+
+- R-Squared
+  A infomação real é a variação associada ao dado, quanto mais alto,
+  mais a variação da var dependente foi explicada pelo modelo. Porém,
+  quanto mais variáveis adicionadas, maior o valor possível de
+  R-Squared, uma vez que o valor é composto pelo conjunto de variáveis
+  independentes em seu todo. Assim, o número de variáveis deve ser
+  levado em conta antes de se usar esse valor para descartar um modelo
+  (se o valor for baixo e so usar uma variável, por exemplo)
+
+- Precisão e Taxa de erro
+  Uma vez separada a base entre treinamento e teste, pode-se construir
+  um modelo sobre os dados de treinamento e aplicá-lo sobre o valor de
+  teste, esperando encontrar o valor real. A comparação dos resultados
+  permite calcular
+  - Taxa de erro (MAPE) -> dividir o menor valor pelo maior (entre o
+    valor real e o valor previsto) e tirar a media. Quanto menor ela
+    for, mais próximo os valores são. ideal entre 0.1 e 0.001
+  - Precisão -> diferença e variação entre o valor encontrado e o
+    valor real, quanto mais próxima de 1 melhor. calculada como:
+    - diferença entre valor predito e valor real
+    - dividido pelo valor real
+    - media do absoluto
+
+- Área sobre a curva ROC
+  ???????
+  |    valor | avaliação |
+  |  0.6-0.7 | ok        |
+  | 0.71-0.8 | bom       |
+  | 0.81-0.9 | wow!!     |
+
+** Regressão logistica
+Previsão dicotômica a partir de variáveis independentes, permite
+classificar dados novos. O modelo gera um resultado entre 0 e 1, e o
+pólo do qual se aproximar indica o grupo ao qual o dado novo deve
+pertencer. O resultado cai em uma curva S (sigmoide) e é classificado
+junto à metade da curva em que esstiver
+* Aula 9
+** Arvore de decisão
+Os dados de treinamento são usados de modo a gerar uma sequência de
+passos (nós de decisão) com alto valor preditivo. 
+
+
+
+* Proposta
+Para o projeto, vamos analisar a correlação entre poluição e preço de
+alugueis. O mês de referência dos dados de alguel é abril/19, enquanto
+os dados de poluição seguem uma série sobre a maior parte da década
+passada. assim, procuramos entener:
+- quais os locais poluidos para o mes de referência
+  - regressão logistica
+  - arvore de decisão considerando diversos poluentes
+- qual a tendencia de poluição para cada local
+  - série temporal
+- variações na média de preços para cada região
+  - sé temporal
+- estabelecer a correlação entre um local poluído e os valores de
+  alugéis
+  - kcluster
+  - arvore de decisão
+- elaborar uma modelo que verifique, pela tendência de flutuação de
+  poluentes, a tendência de preços para uma região
+  - ????

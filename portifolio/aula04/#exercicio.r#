@@ -1,0 +1,34 @@
+## Alkindar José Ferraz Rodrigues
+## aula 4
+## analise da base sinasc em conjunto com municipios
+####################################################
+
+## Dependencias
+setwd("./portifolio/aula4")
+library("dplyr")
+
+## input de dados
+sinasc <- read.csv("./input/SINASC_2020.csv", sep = ";", header = TRUE) %>%
+    select("CODMUNNASC", "LOCNASC", "ESCMAE", "PARTO", "SEXO", "RACACOR")
+sinasc$CODMUNNASC <- factor(sinasc$CODMUNNASC)
+sinasc$LOCNASC <- factor(sinasc$LOCNASC)
+sinasc$ESCMAE <- factor(sinasc$ESCMAE)
+sinasc$PARTO <-  factor(sinasc$PARTO)
+sinasc$RACACOR <- factor(sinasc$RACACOR)
+
+municipios <- read.csv("./input/municipios.csv", header = TRUE) %>%
+    select("CODMUNIC", "uf_code", "uf")
+
+## analise dados de nascimento
+## media de nascimento por escolaridade
+sinasc1 <- sinasc  %>%
+    group_by(ESCMAE) %>%
+    summarise(
+        count=n(),
+    )
+
+
+## tipo de parto por raça
+
+## analise combinada
+## sexo da criança por região
