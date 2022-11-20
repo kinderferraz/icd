@@ -1,6 +1,10 @@
 library(dplyr)
 library(sp)
 
+################################################################
+### BASE DE POLUICAO EM SP                                  ####
+################################################################
+
 ## esta é uma tabela focada nas estações, com um registro para cada estações,
 ## selecionamos as estações em sp, e suas coordenadas e outras informações.
 ## Uma primeira leitura mostrou que estes campo são invariantes, de modo que
@@ -37,17 +41,16 @@ str(estacoes)
 ## estiverem na 2 tabela (a do filtro)
 pollution_records <- read.csv("trabalho/input/spAirPollution/cetesb.csv/cetesb.csv")  %>%
     select("time", "id", "CO", "NO2", "MP10", "MP2.5", "O3")  %>%
-    right_join(estacoes, by = c("id" = "idt"))#  %>%
-    ## transmute(idt = id
-    ##          ,data = as.Date(time)
-    ##          ,nome = nome
-    ##          ,co = CO
-    ##          ,co2 = CO2
-    ##          ,no2 = NO2
-    ##          ,particulado10 = MP10
-    ##          ,particulado2.5 = MP2.5
-    ##          ,ozonio = 03
-    ##           )
+    right_join(estacoes, by = c("id" = "idt"))  %>%
+    transmute(idt = id
+             ,data = as.Date(time)
+             ,nome = nome
+             ,co = CO
+             ,no2 = NO2
+             ,particulado10 = MP10
+             ,particulado2.5 = MP2.5
+             ,ozonio = 03
+              )
 
 ## considerando que a tabela tem 660101 registros
 ## selecionamos os poluentes com maior numero de registros
@@ -74,3 +77,19 @@ pollution_records <- read.csv("trabalho/input/spAirPollution/cetesb.csv/cetesb.c
 ## [1] 619230
 ## > nrow(data[is.na(data$TRS),])
 ## [1] 624588
+
+
+################################################################
+### BASE DE ALUGUEIS EM SP                                  ####
+################################################################
+## essa base ta muito linda, direto do kaggle <3
+
+aluguel <- read.csv("trabalho/input/realEstate/sp/spRealEstate_2019_04.csv") %>%
+    mutate(
+        Swimming.Pool = ifelse(Swimming.Pool == 1, TRUE, FALSE)
+      , New = ifelse(New == 1, TRUE, FALSE)
+      , Property.Type = ifelse(Property.Type == 1, TRUE, FALSE)
+      , Furnished = ifelse(Furnished == 1, TRUE, FALSE)
+      , Elevator = ifelse(Elevator == 1, TRUE, FALSE)
+      , Negotiation.Type = as.factor(Negotiation.Type)
+    )
